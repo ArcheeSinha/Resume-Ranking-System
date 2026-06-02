@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 from utils.preprocess import clean_text
 from utils.similarity import (
@@ -17,41 +18,91 @@ st.set_page_config(
 )
 
 # ===================================
-# Title
+# Sidebar
 # ===================================
 
-st.title("📄 Intelligent Resume Ranking System")
-st.write(
-    "Rank candidates using TF-IDF and Cosine Similarity"
+with st.sidebar:
+
+    st.title("📄 Resume Ranking")
+
+    st.markdown("""
+    ### Features
+
+    ✅ Text Preprocessing
+
+    ✅ TF-IDF Vectorization
+
+    ✅ Cosine Similarity
+
+    ✅ Candidate Ranking
+
+    ✅ CSV Export
+    """)
+
+    st.info(
+        "Upload one Job Description and multiple resumes."
+    )
+
+# ===================================
+# Header
+# ===================================
+
+st.markdown(
+    """
+    <h1 style='text-align:center;'>
+        📄 Intelligent Resume Ranking System
+    </h1>
+
+    <p style='text-align:center; font-size:18px;'>
+        AI-Powered Candidate Screening using TF-IDF and Cosine Similarity
+    </p>
+    """,
+    unsafe_allow_html=True
 )
 
-# ===================================
-# File Uploaders
-# ===================================
-
-job_description_file = st.file_uploader(
-    "Upload Job Description",
-    type=["txt"]
-)
-
-resume_files = st.file_uploader(
-    "Upload Resume Files",
-    type=["txt"],
-    accept_multiple_files=True
-)
+st.divider()
 
 # ===================================
-# Rank Button
+# Upload Files
 # ===================================
 
-if st.button("Rank Candidates"):
+col1, col2 = st.columns(2)
+
+with col1:
+
+    job_description_file = st.file_uploader(
+        "📋 Upload Job Description",
+        type=["txt"]
+    )
+
+with col2:
+
+    resume_files = st.file_uploader(
+        "📄 Upload Resumes",
+        type=["txt"],
+        accept_multiple_files=True
+    )
+
+# ===================================
+# Rank Candidates
+# ===================================
+
+if st.button("🚀 Rank Candidates", use_container_width=True):
 
     if not job_description_file:
-        st.error("Please upload a Job Description.")
+
+        st.error(
+            "Please upload a Job Description."
+        )
+
         st.stop()
 
     if not resume_files:
-        st.error("Please upload at least one Resume.")
+
+        st.error(
+            "Please upload at least one Resume."
+        )
+
         st.stop()
 
     # ===================================
@@ -77,32 +128,38 @@ if st.button("Rank Candidates"):
     # Preprocessing
     # ===================================
 
-    cleaned_jd = clean_text(job_description)
+    cleaned_jd = clean_text(
+        job_description
+    )
 
     cleaned_resumes = {}
 
     for filename, content in resumes.items():
 
-        cleaned_resumes[filename] = clean_text(
-            content
+        cleaned_resumes[filename] = (
+            clean_text(content)
         )
 
     # ===================================
-    # TF-IDF
+    # TF-IDF + Similarity
     # ===================================
 
-    tfidf_matrix, vectorizer = create_tfidf_vectors(
-        cleaned_jd,
-        cleaned_resumes
-    )
+    with st.spinner(
+        "Analyzing resumes..."
+    ):
 
-    # ===================================
-    # Similarity Scores
-    # ===================================
+        tfidf_matrix, vectorizer = (
+            create_tfidf_vectors(
+                cleaned_jd,
+                cleaned_resumes
+            )
+        )
 
-    similarity_scores = calculate_similarity(
-        tfidf_matrix
-    )
+        similarity_scores = (
+            calculate_similarity(
+                tfidf_matrix
+            )
+        )
 
     # ===================================
     # Ranking
@@ -121,28 +178,21 @@ if st.button("Rank Candidates"):
             .title()
         )
 
-        match_percentage = round(
-            score * 100,
-            2
-        )
-
         results.append(
             {
-                "Candidate": candidate_name,
-                "Match Score (%)": match_percentage
+                "Candidate":
+                    candidate_name,
+
+                "Match Score (%)":
+                    round(score * 100, 2)
             }
         )
 
-    # Sort Highest First
-
     results.sort(
-        key=lambda x: x["Match Score (%)"],
+        key=lambda x:
+        x["Match Score (%)"],
         reverse=True
     )
-
-    # ===================================
-    # Add Rank
-    # ===================================
 
     final_results = []
 
@@ -151,21 +201,130 @@ if st.button("Rank Candidates"):
         start=1
     ):
 
+        medal = ""
+
+        if rank == 1:
+            medal = "🥇"
+
+        elif rank == 2:
+            medal = "🥈"
+
+        elif rank == 3:
+            medal = "🥉"
+
         final_results.append(
             {
-                "Rank": rank,
-                "Candidate": candidate["Candidate"],
+                "Rank":
+                    f"{medal} {rank}",
+
+                "Candidate":
+                    candidate["Candidate"],
+
                 "Match Score (%)":
                     candidate["Match Score (%)"]
             }
         )
 
+    df = pd.DataFrame(
+        final_results
+    )
+
     # ===================================
-    # Display Results
+    # Statistics
     # ===================================
 
-    st.success("Ranking Completed!")
+    st.success(
+        "Ranking Completed Successfully!"
+    )
 
-    st.subheader("🏆 Candidate Rankings")
+    st.subheader(
+        "📊 Dashboard Statistics"
+    )
 
-    st.table(final_results)
+    total_resumes = len(df)
+
+    best_match = (
+        df["Match Score (%)"]
+        .max()
+    )
+
+    average_match = round(
+        df["Match Score (%)"]
+        .mean(),
+        2
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Total Resumes",
+        total_resumes
+    )
+
+    col2.metric(
+        "Best Match",
+        f"{best_match}%"
+    )
+
+    col3.metric(
+        "Average Match",
+        f"{average_match}%"
+    )
+
+    # ===================================
+    # Ranking Table
+    # ===================================
+
+    st.subheader(
+        "🏆 Candidate Rankings"
+    )
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    # ===================================
+    # Visualization
+    # ===================================
+
+    st.subheader(
+        "📈 Match Score Comparison"
+    )
+
+    chart_df = df.copy()
+
+    chart_df["Rank"] = (
+        chart_df["Rank"]
+        .astype(str)
+    )
+
+    chart_df = chart_df.set_index(
+        "Candidate"
+    )
+
+    st.bar_chart(
+        chart_df["Match Score (%)"]
+    )
+
+    # ===================================
+    # Download CSV
+    # ===================================
+
+    st.subheader(
+        "📥 Export Results"
+    )
+
+    csv_data = (
+        df.to_csv(
+            index=False
+        )
+    )
+
+    st.download_button(
+        label="Download Rankings CSV",
+        data=csv_data,
+        file_name="rankings.csv",
+        mime="text/csv"
+    )
