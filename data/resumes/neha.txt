@@ -1,0 +1,11 @@
+Neha
+
+Skills:
+Python
+Machine Learning
+Deep Learning
+NLP
+Pandas
+
+Projects:
+Sentiment Analysis

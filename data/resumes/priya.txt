@@ -1,0 +1,12 @@
+Priya
+
+Skills:
+Python
+Machine Learning
+SQL
+Pandas
+Scikit-learn
+Data Analysis
+
+Projects:
+House Price Prediction

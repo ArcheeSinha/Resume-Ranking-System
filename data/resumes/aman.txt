@@ -1,0 +1,10 @@
+Aman
+
+Skills:
+Python
+SQL
+Excel
+Data Analysis
+
+Projects:
+Sales Dashboard

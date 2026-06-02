@@ -1,0 +1,9 @@
+We are looking for an AI Intern with knowledge of Python,
+Machine Learning, Data Analysis, SQL, NLP, Pandas,
+Scikit-learn and Deep Learning.
+
+Responsibilities:
+- Build machine learning models
+- Analyze datasets
+- Work with NLP applications
+- Create data visualizations
